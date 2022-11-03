@@ -18,7 +18,7 @@ Result is stored in a environment variable named RELEASE_VERSION.
 ```
 - name: Create Release
   id: create_release
-  uses: vincent-caraccio/create-release@v1.0.3
+  uses: vincent-caraccio/create-release@v1.0.4
   with:
     token: ${{ secrets.GITHUB_TOKEN }} # No need to create it
     tag_name: ${{ env.RELEASE_VERSION }}
