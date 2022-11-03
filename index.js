@@ -13,7 +13,7 @@ const path = require('path');
 
     checkInputs();
     const uploadUrl = await createRelease(octokit, owner, repo);
-    await uploadAsset(octokit, owner, repo, uploadUrl);
+    await uploadAsset(octokit, uploadUrl);
   } catch (error) {
     core.setFailed(error.message);
   }
