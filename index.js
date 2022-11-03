@@ -10,7 +10,11 @@ const github = require('@actions/github');
     const name = core.getInput('release_name');
     const { owner, repo } = github.context.repo;
     const octokit = github.getOctokit(token);
-    const { data } = await octokit.request('POST /repos/{owner}/{repo}/releases', { owner, repo, tag_name, name });
+    const generate_release_notes = true;
+    const { data } = await octokit.request(
+      'POST /repos/{owner}/{repo}/releases',
+      { owner, repo, tag_name, name, generate_release_notes }
+    );
     exportDataToOutput(data);
   } catch (error) {
     core.setFailed(error.message);
