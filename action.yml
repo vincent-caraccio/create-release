@@ -39,8 +39,5 @@ outputs:
   upload_url:
     description: 'The URL for uploading assets to the release'
 runs:
-  using: 'node18'
+  using: 'node16'
   main: 'dist/index.js'
-branding:
-  icon: 'tag'
-  color: 'gray-dark'
