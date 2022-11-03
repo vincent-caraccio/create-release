@@ -41,10 +41,15 @@ function getSafePath() {
 
 async function uploadAsset(octokit, uploadUrl) {
   const safePath = getSafePath();
-  if (!safePath || !fs.existsSync(safePath)) return;
+  if (!safePath || !fs.existsSync(safePath)) {
+    console.log('No asset found to upload (not defined or file does not exist), will stop here.');
+    return;
+  }
 
   const name = core.getInput('asset_name') || path.basename(safePath);
   const assetContentType = core.getInput('asset_content_type');
+
+  console.log(`Starting upload of asset ${name}`);
 
   await octokit.request({
     method: 'POST',
@@ -53,6 +58,8 @@ async function uploadAsset(octokit, uploadUrl) {
     name,
     data: fs.readFileSync(safePath)
   });
+
+  console.log(`Successfully uploaded ${name}`);
 }
 
 async function createRelease(octokit, owner, repo) {
@@ -63,5 +70,6 @@ async function createRelease(octokit, owner, repo) {
     'POST /repos/{owner}/{repo}/releases',
     { owner, repo, tag_name, name, generate_release_notes }
   );
+  console.log(`Successfully created release ${name}: ${data.html_url}`);
   return data.upload_url;
 }
