@@ -2,7 +2,7 @@ name: 'Create Release'
 description: 'Create a GitHub Release'
 inputs:
   token:
-    name: 'Tag name'
+    name: 'Token'
     required: true
   tag_name:
     name: 'Tag name'
@@ -10,6 +10,15 @@ inputs:
   release_name:
     name: 'Release name'
     required: true
+  asset_path:
+    name: 'Asset path'
+    required: false
+  asset_name:
+    name: 'Asset name'
+    required: false
+  asset_content_type:
+    name: 'Asset Content Type'
+    required: false
 runs:
   using: 'node16'
   main: 'index.js'
