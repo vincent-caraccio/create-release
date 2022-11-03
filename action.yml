@@ -1,6 +1,6 @@
 name: 'Create a Release'
 description: 'Create a release for a tag in your repository'
-author: 'GitHub'
+author: 'Vincent Caraccio (fork from GitHub)'
 inputs:
   tag_name:
     description: 'The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag'
@@ -39,7 +39,7 @@ outputs:
   upload_url:
     description: 'The URL for uploading assets to the release'
 runs:
-  using: 'node12'
+  using: 'node18'
   main: 'dist/index.js'
 branding:
   icon: 'tag'
