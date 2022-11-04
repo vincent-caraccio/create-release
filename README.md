@@ -1,7 +1,6 @@
 # Get version number
 
-This action extracts the version of the latest release and increments it.
-Result is stored in a environment variable named RELEASE_VERSION.
+This action creates a GitHub Release and associated Git tag. If defined, will upload and attach an asset to the release.
 
 ## Inputs
 
