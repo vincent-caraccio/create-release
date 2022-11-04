@@ -71,5 +71,8 @@ async function createRelease(octokit, owner, repo) {
     { owner, repo, tag_name, name, generate_release_notes }
   );
   console.log(`Successfully created release ${name}: ${data.html_url}`);
+  core.setOutput('upload_url', data.upload_url);
+  core.setOutput('html_url', data.html_url);
+  core.setOutput('release_id', data.id);
   return data.upload_url;
 }
