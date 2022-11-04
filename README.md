@@ -1,4 +1,4 @@
-# Get version number
+# Create Release
 
 This action creates a GitHub Release and associated Git tag. If defined, will upload and attach an asset to the release.
 
