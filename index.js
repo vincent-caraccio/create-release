@@ -56,7 +56,8 @@ async function uploadAsset(octokit, uploadUrl) {
     url: uploadUrl,
     headers: { 'Content-Type': assetContentType },
     name,
-    data: fs.readFileSync(safePath)
+    data: fs.readFileSync(safePath),
+    target_commitish: github.context.sha
   });
 
   console.log(`Successfully uploaded ${name}`);
