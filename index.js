@@ -56,8 +56,7 @@ async function uploadAsset(octokit, uploadUrl) {
     url: uploadUrl,
     headers: { 'Content-Type': assetContentType },
     name,
-    data: fs.readFileSync(safePath),
-    target_commitish: github.context.sha
+    data: fs.readFileSync(safePath)
   });
 
   console.log(`Successfully uploaded ${name}`);
@@ -67,9 +66,10 @@ async function createRelease(octokit, owner, repo) {
   const tag_name = core.getInput('tag_name');
   const name = core.getInput('release_name');
   const generate_release_notes = true;
+  const target_commitish = github.context.sha;
   const { data } = await octokit.request(
     'POST /repos/{owner}/{repo}/releases',
-    { owner, repo, tag_name, name, generate_release_notes }
+    { owner, repo, tag_name, name, generate_release_notes, target_commitish }
   );
   console.log(`Successfully created release ${name}: ${data.html_url}`);
   core.setOutput('upload_url', data.upload_url);
