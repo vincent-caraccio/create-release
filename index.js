@@ -33,33 +33,39 @@ function checkInputs() {
 
 function getSafePath() {
   const asset_path = core.getInput('asset_path');
-  if (!asset_path) return undefined;
-  const split = asset_path.split('/');
-  const safePath = path.join(process.env.GITHUB_WORKSPACE, ...split);
-  return safePath;
+  if (!asset_path) return [];
+  return asset_path
+    .split('\n')
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => p.split('/'))
+    .map(split => path.join(process.env.GITHUB_WORKSPACE, ...split));
 }
 
 async function uploadAsset(octokit, uploadUrl) {
-  const safePath = getSafePath();
-  if (!safePath || !fs.existsSync(safePath)) {
+  const safePaths = getSafePath();
+  const exising = safePaths.filter(p => fs.existsSync(p));
+  if (!exising.length) {
     console.log('No asset found to upload (not defined or file does not exist), will stop here.');
     return;
   }
 
-  const name = core.getInput('asset_name') || path.basename(safePath);
-  const assetContentType = core.getInput('asset_content_type');
-
-  console.log(`Starting upload of asset ${name}`);
-
-  await octokit.request({
-    method: 'POST',
-    url: uploadUrl,
-    headers: { 'Content-Type': assetContentType },
-    name,
-    data: fs.readFileSync(safePath)
-  });
-
-  console.log(`Successfully uploaded ${name}`);
+  return Promise.all(exising.map(async safePath => {
+    const name = (exising.length === 1 && core.getInput('asset_name')) || path.basename(safePath);
+    const assetContentType = core.getInput('asset_content_type');
+  
+    console.log(`Starting upload of asset ${name}`);
+  
+    await octokit.request({
+      method: 'POST',
+      url: uploadUrl,
+      headers: { 'Content-Type': assetContentType },
+      name,
+      data: fs.readFileSync(safePath)
+    });
+  
+    console.log(`Successfully uploaded ${name}`);
+  }));
 }
 
 async function createRelease(octokit, owner, repo) {
