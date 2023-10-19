@@ -34,7 +34,7 @@ function checkInputs() {
 function getSafePath() {
   const asset_path = core.getInput('asset_path');
   if (!asset_path) return [];
-  console.log(asset_path);
+
   return asset_path
     .split('\n')
     .map(p => p.trim())
@@ -54,9 +54,9 @@ async function uploadAsset(octokit, uploadUrl) {
   return Promise.all(exising.map(async safePath => {
     const name = (exising.length === 1 && core.getInput('asset_name')) || path.basename(safePath);
     const assetContentType = core.getInput('asset_content_type');
-  
+
     console.log(`Starting upload of asset ${name}`);
-  
+
     await octokit.request({
       method: 'POST',
       url: uploadUrl,
@@ -64,7 +64,7 @@ async function uploadAsset(octokit, uploadUrl) {
       name,
       data: fs.readFileSync(safePath)
     });
-  
+
     console.log(`Successfully uploaded ${name}`);
   }));
 }
