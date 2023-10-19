@@ -34,6 +34,7 @@ function checkInputs() {
 function getSafePath() {
   const asset_path = core.getInput('asset_path');
   if (!asset_path) return [];
+  console.log(asset_path);
   return asset_path
     .split('\n')
     .map(p => p.trim())
