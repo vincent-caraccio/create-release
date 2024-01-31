@@ -25,7 +25,7 @@ This action creates a GitHub Release and associated Git tag. If defined, will up
 ```
 - name: Create Release
   id: create_release
-  uses: vincent-caraccio/create-release@v1.0.11
+  uses: vincent-caraccio/create-release@v1.0.13
   with:
     token: ${{ secrets.GITHUB_TOKEN }} # No need to create it
     tag_name: ${{ env.RELEASE_VERSION }}
