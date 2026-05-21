@@ -20,5 +20,5 @@ inputs:
     name: 'Asset Content Type'
     required: false
 runs:
-  using: 'node16'
+  using: 'node24'
   main: 'index.js'
