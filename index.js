@@ -12,8 +12,14 @@ const path = require('path');
     const { owner, repo } = github.context.repo;
 
     checkInputs();
-    const uploadUrl = await createRelease(octokit, owner, repo);
-    await uploadAsset(octokit, uploadUrl);
+    // ORDER IS THE CONTRACT: a release is PUBLISHED only once its assets are attached and verified.
+    // Publishing is what fires the `released` webhook monitor-service auto-deploys on, so a release
+    // published before its file exists (the old create -> upload order) can be read with no asset.
+    // So: create a DRAFT (no webhook, invisible to deploys), upload, verify, then publish.
+    const release = await createDraftRelease(octokit, owner, repo);
+    const uploaded = await uploadAsset(octokit, release.upload_url);
+    await verifyAssets(octokit, owner, repo, release.id, uploaded);
+    await publishRelease(octokit, owner, repo, release.id);
   } catch (error) {
     core.setFailed(error.message);
   }
@@ -47,7 +53,7 @@ async function uploadAsset(octokit, uploadUrl) {
   const exising = safePaths.filter(p => fs.existsSync(p));
   if (!exising.length) {
     console.log('No asset found to upload (not defined or file does not exist), will stop here.');
-    return;
+    return [];
   }
 
   return Promise.all(exising.map(async safePath => {
@@ -65,21 +71,47 @@ async function uploadAsset(octokit, uploadUrl) {
     });
   
     console.log(`Successfully uploaded ${name}`);
+    return { name, size: fs.statSync(safePath).size };
   }));
 }
 
-async function createRelease(octokit, owner, repo) {
+// Reads the DRAFT's asset list back from GitHub and requires every uploaded file to be there, fully
+// uploaded, at its local byte size. Throws otherwise — the release then stays an unpublished draft.
+async function verifyAssets(octokit, owner, repo, release_id, expected) {
+  if (!expected.length) return;
+  const { data } = await octokit.request(
+    'GET /repos/{owner}/{repo}/releases/{release_id}/assets',
+    { owner, repo, release_id, per_page: 100 }
+  );
+  for (const { name, size } of expected) {
+    const asset = data.find(a => a.name === name);
+    if (!asset) throw new Error(`Asset ${name} is not attached to the release — not publishing.`);
+    if (asset.state !== 'uploaded') throw new Error(`Asset ${name} is in state '${asset.state}', not 'uploaded' — not publishing.`);
+    if (asset.size !== size) throw new Error(`Asset ${name} is ${asset.size} bytes on GitHub, ${size} locally — not publishing.`);
+    console.log(`Verified asset ${name} (${size} bytes)`);
+  }
+}
+
+async function publishRelease(octokit, owner, repo, release_id) {
+  const { data } = await octokit.request(
+    'PATCH /repos/{owner}/{repo}/releases/{release_id}',
+    { owner, repo, release_id, draft: false }
+  );
+  console.log(`Published release ${data.name}: ${data.html_url} (${(data.assets || []).length} asset(s))`);
+  core.setOutput('html_url', data.html_url);
+}
+
+async function createDraftRelease(octokit, owner, repo) {
   const tag_name = core.getInput('tag_name');
   const name = core.getInput('release_name');
   const generate_release_notes = true;
   const target_commitish = github.context.sha;
   const { data } = await octokit.request(
     'POST /repos/{owner}/{repo}/releases',
-    { owner, repo, tag_name, name, generate_release_notes, target_commitish }
+    { owner, repo, tag_name, name, generate_release_notes, target_commitish, draft: true }
   );
-  console.log(`Successfully created release ${name}: ${data.html_url}`);
+  console.log(`Created DRAFT release ${name} (id ${data.id})`);
   core.setOutput('upload_url', data.upload_url);
-  core.setOutput('html_url', data.html_url);
   core.setOutput('release_id', data.id);
-  return data.upload_url;
+  return data;
 }
